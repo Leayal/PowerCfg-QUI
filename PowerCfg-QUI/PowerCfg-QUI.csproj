@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <RootNamespace>Leayal.PowerCfg_QUI</RootNamespace>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>powercfg_settings.ico</ApplicationIcon>
+    <Authors>Dramiel Leayal</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="powercfg_settings.ico" />
+  </ItemGroup>
+
+</Project>
