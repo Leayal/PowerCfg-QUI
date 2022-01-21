@@ -40,8 +40,20 @@ namespace Leayal.PowerCfg_QUI
 
         protected override void OnStartupNextInstance(StartupNextInstanceEventArgs eventArgs)
         {
-            eventArgs.BringToForeground = true;
+            eventArgs.BringToForeground = false;
             base.OnStartupNextInstance(eventArgs);
+            if (this.MainForm is MyMainMenu form)
+            {
+                // form.Hide();
+                if (form.InvokeRequired)
+                {
+                    form.BeginInvoke(form.GiveHighlight);
+                }
+                else
+                {
+                    form.GiveHighlight();
+                }
+            }
         }
     }
 }

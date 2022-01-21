@@ -40,7 +40,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MyMainMenu";
             this.ShowInTaskbar = false;
-            this.Text = "Power Plan Configuration";
+            this.Text = "Power Plan Quick UI by Dramiel Leayal";
             this.ResumeLayout(false);
 
         }

@@ -58,18 +58,27 @@ namespace Leayal.PowerCfg_QUI.Classes
 
         public static bool GetCurrentPowerScheme(out Guid activeId, out string activeName)
         {
-            // uint sizeSchemeGuid = (uint)Marshal.SizeOf(typeof(Guid));
+            if (GetCurrentPowerScheme(out activeId))
+            {
+                activeName = GetPowerSchemeName(activeId) ?? string.Empty;
+                return true;
+            }
+            activeId = Guid.Empty;
+            activeName = string.Empty;
+            return false;
+        }
+
+        public static bool GetCurrentPowerScheme(out Guid activeId)
+        {
             IntPtr ptr = IntPtr.Zero;
             uint res = PowerGetActiveScheme(IntPtr.Zero, ref ptr);
             if (res == 0)
             {
                 activeId = Marshal.PtrToStructure<Guid>(ptr);
                 LocalFree(ptr);
-                activeName = GetPowerSchemeName(activeId) ?? String.Empty;
                 return true;
             }
             activeId = Guid.Empty;
-            activeName = string.Empty;
             return false;
         }
 

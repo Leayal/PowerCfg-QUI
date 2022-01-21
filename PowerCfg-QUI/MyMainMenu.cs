@@ -6,19 +6,25 @@ namespace Leayal.PowerCfg_QUI
 {
     public partial class MyMainMenu : Form
     {
-        private readonly NotifyIcon TrayIcon;
+        public readonly NotifyIcon TrayIcon;
         private readonly ContextMenuStrip TrayIconMenu;
-        private readonly List<ToolStripMenuItem> TrayMenuItems;
 
         private readonly ToolStripSeparator sep1, sep2;
         private readonly ToolStripMenuItem title, cmdOpenWindowDialog, textPlans, exit;
-        private readonly Action? ShowIconContextMenu;
+        private readonly Action? _showIconContextMenu;
+        private readonly System.Windows.Forms.Timer _timer;
+        private bool shownNotification;
 
         public MyMainMenu()
         {
-            this.TrayMenuItems = new List<ToolStripMenuItem>();
+            this.shownNotification = false;
             this.TrayIcon = new NotifyIcon() { Visible = false };
 
+            this._timer = new System.Windows.Forms.Timer()
+            {
+                Enabled = false,
+                Interval = 30000
+            };
             this.sep1 = new ToolStripSeparator();
             this.sep2 = new ToolStripSeparator();
             this.title = new ToolStripMenuItem("Power Plan Configuration") { Enabled = false };
@@ -29,20 +35,29 @@ namespace Leayal.PowerCfg_QUI
             this.cmdOpenWindowDialog.Click += CmdOpenWindowDialog_Click;
 
             InitializeComponent();
-            this.TrayIconMenu = new ContextMenuStrip() { AutoClose = true };
+            this.TrayIconMenu = new ContextMenuStrip();
             this.TrayIcon.Icon = this.Icon;
             this.TrayIcon.Text = this.Text;
+            this.TrayIcon.BalloonTipTitle = this.Text;
+            this.TrayIcon.BalloonTipText = "The tool is running in the system tray (the notification area next to the clock on the Taskbar)";
+            this.TrayIcon.BalloonTipIcon = ToolTipIcon.Info;
             this.TrayIcon.ContextMenuStrip = this.TrayIconMenu;
 
             this.TrayIconMenu.Opening += this.TrayIconMenu_Opening;
             this.TrayIconMenu.Closed += TrayIconMenu_Closed;
             this.TrayIcon.Click += this.TrayIcon_Click;
-            // this.ShowInTaskbar= false;
+            this._timer.Tick += Timer_Tick;
 
             if (typeof(NotifyIcon).GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic) is MethodInfo mi)
             {
-                this.ShowIconContextMenu = (Action)Delegate.CreateDelegate(typeof(Action), this.TrayIcon, mi);
+                this._showIconContextMenu = (Action)Delegate.CreateDelegate(typeof(Action), this.TrayIcon, mi);
             }
+        }
+
+        private void Timer_Tick(object? sender, EventArgs e)
+        {
+            this._timer.Stop();
+            this.shownNotification = false;
         }
 
         private static void CmdOpenWindowDialog_Click(object? sender, EventArgs e)
@@ -79,7 +94,7 @@ namespace Leayal.PowerCfg_QUI
                 menu.Items.Clear();
                 menu.Items.AddRange(new ToolStripItem[] { this.title, this.cmdOpenWindowDialog, this.sep1, this.textPlans });
 
-                PowerCfg.GetCurrentPowerScheme(out var activeId, out _);
+                PowerCfg.GetCurrentPowerScheme(out var activeId);
                 
                 var list = new List<ToolStripMenuItem>();
                 foreach (var planId in PowerCfg.GetAllPowerSchemes())
@@ -105,12 +120,17 @@ namespace Leayal.PowerCfg_QUI
             {
                 if (menu.Tag is List<ToolStripMenuItem> list)
                 {
+                    menu.Tag = null;
                     foreach (var item in list)
                     {
                         menu.Items.Remove(item);
                         item.Click -= ItemPlan_Click;
                         item.Dispose();
                     }
+                }
+                else
+                {
+                    menu.Tag = null;
                 }
             }
         }
@@ -125,19 +145,35 @@ namespace Leayal.PowerCfg_QUI
 
         private void TrayIcon_Click(object? sender, EventArgs e)
         {
-            if (sender is NotifyIcon icon && icon.ContextMenuStrip is ContextMenuStrip menu)
+            this.ShowIconContextMenu();
+        }
+
+        private void ShowIconContextMenu()
+        {
+            if (this.TrayIcon.ContextMenuStrip is ContextMenuStrip menu)
             {
-                if (this.ShowIconContextMenu != null)
+                if (this._showIconContextMenu != null)
                 {
                     // Workaround the issue where manually show the menu will not make the menu visible if the handle isn't created.
                     if (!menu.IsHandleCreated)
                     {
                         // Call it first time when handle is not created to init the menu control object.
                         // Then another call after handle creation to actually show the menu.
-                        this.ShowIconContextMenu.Invoke();
+                        this._showIconContextMenu.Invoke();
                     }
-                    this.ShowIconContextMenu.Invoke();
+                    this._showIconContextMenu.Invoke();
                 }
+            }
+        }
+
+        public void GiveHighlight()
+        {
+            this.ShowIconContextMenu();
+            if (!this.shownNotification)
+            {
+                this.shownNotification = true;
+                this._timer.Start();
+                this.TrayIcon.ShowBalloonTip(10000);
             }
         }
 
