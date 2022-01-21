@@ -124,7 +124,6 @@ namespace Leayal.PowerCfg_QUI
                     foreach (var item in list)
                     {
                         menu.Items.Remove(item);
-                        item.Click -= ItemPlan_Click;
                         item.Dispose();
                     }
                 }
